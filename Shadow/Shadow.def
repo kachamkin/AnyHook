@@ -1,0 +1,4 @@
+LIBRARY Shadow
+EXPORTS
+	ShadowTerminateProcess @1
+	ShadowExitProcess @2

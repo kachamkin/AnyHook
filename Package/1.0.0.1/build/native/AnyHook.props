@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+        ToolsVersion="15.0">
+  <ItemGroup>
+  <FilamentLibs Include="$(MSBuildThisFileDirectory)\lib\x64\*.lib" />
+  </ItemGroup>
+  <PropertyGroup>
+    <!-- Expland the items to a property -->
+    <FilamentLibraries>@(FilamentLibs)</FilamentLibraries>
+    </PropertyGroup>
+    <ItemDefinitionGroup>
+    <ClCompile>   <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(FilamentLibraries);%(AdditionalDependencies) 
+      </AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

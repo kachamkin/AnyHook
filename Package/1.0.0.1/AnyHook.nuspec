@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>AnyHook</id>
+    <version>1.0.0.4</version>
+    <title>AnyHook Package</title>
+    <authors>Andrey Kachamkin</authors>
+    <owners>Andrey Kachamkin</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="file">license.txt</license>
+    <description>AnyHook Package</description>
+    <summary>Local, remote and global windows hooks: native and managed</summary>
+    <copyright>Copyright © Andrey Kachamkin. All rights reserved.</copyright>
+    <tags>api hook hooking anyhook native nativepackage net framework core</tags>
+  </metadata>
+</package>
