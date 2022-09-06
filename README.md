@@ -36,3 +36,8 @@ int wmain()
     WaitForSingleObject(GetCurrentProcess(), INFINITE);
     return 0;
 }
+
+Author parially used ideas proposed and implemented:
+
+1) here: https://github.com/EasyHook/EasyHook
+2) and here: https://github.com/williammortl/Prochook64
