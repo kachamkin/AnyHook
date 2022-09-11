@@ -219,10 +219,19 @@ BOOL AreThereHooks(LPCSTR funcName, DWORD procId)
 
 void WaitForRemove()
 {
+    HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
     HANDLE hRem = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\SignalRemove");
-    if (hRem)
+    HANDLE handles[2]{ hClean, hRem };
+    if (hRem && hClean)
     {
-        if (WaitForSingleObject(hRem, INFINITE) == WAIT_OBJECT_0)
+        DWORD waitResult = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+        if (waitResult == WAIT_OBJECT_0)
+        {
+            CloseHandle(hRem);
+            CloseHandle(hClean);
+            FreeLibraryAndExitThread(hDll, 0);
+        }
+        else if (waitResult == WAIT_OBJECT_0 + 1)
         {
             HANDLE hMut = OpenMutex(SYNCHRONIZE, FALSE, L"Global\\ReadWriteEnabled");
             if (hMut)
@@ -259,10 +268,19 @@ void WaitForRemove()
 
 void WaitForHooks()
 {
+    HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
     HANDLE hCheck = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE , FALSE, L"Global\\SignalCheckHooks");
-    if (hCheck)
+    HANDLE handles[2]{ hClean, hCheck };
+    if (hCheck && hClean)
     {
-        if (WaitForSingleObject(hCheck, INFINITE) == WAIT_OBJECT_0)
+        DWORD waitResult = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+        if (waitResult == WAIT_OBJECT_0)
+        {
+            CloseHandle(hCheck);
+            CloseHandle(hClean);
+            FreeLibraryAndExitThread(hDll, 0);
+        }
+        else if (waitResult == WAIT_OBJECT_0 + 1)
         {
             HANDLE hMut = OpenMutex(SYNCHRONIZE, FALSE, L"Global\\ReadWriteEnabled");
             if (hMut)
@@ -291,6 +309,7 @@ void WaitForHooks()
                 CloseHandle(hMut);
             }
             CloseHandle(hCheck);
+            CloseHandle(hClean);
             WaitForHooks();
         }
     }
@@ -303,6 +322,7 @@ BOOL Initialize(BOOL fromCreator = TRUE)
         creatorId = GetCurrentProcessId();
         hRemove = CreateEvent(NULL, TRUE, FALSE, L"Global\\SignalRemove");
         hCheckHooks = CreateEvent(NULL, TRUE, FALSE, L"Global\\SignalCheckHooks");
+        hCleanUp = CreateEvent(NULL, TRUE, FALSE, L"Global\\CleanUp");
         hMutex = CreateMutex(NULL, TRUE, L"Global\\ReadWriteEnabled");
         if (hMutex)
             ReleaseMutex(hMutex);
@@ -853,6 +873,16 @@ void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
         }
         else
             AddLogMessage(L"Couldn't open mutex", __FILE__, __LINE__);
+        
+        if (key.substr(0, 2) != "0:" && !AreThereHooks((funcAddress ? to_string(funcAddress).data() : funcName), procId) && !AreThereGlobalHooks(funcAddress ? to_string(funcAddress).data() : funcName, procId))
+        {
+            HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
+            if (hClean)
+            {
+                SetEvent(hClean);
+                CloseHandle(hClean);
+            }
+        }
     }
 }
 

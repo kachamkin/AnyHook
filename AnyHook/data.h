@@ -21,6 +21,7 @@ HANDLE hRemove = NULL;
 HANDLE hCheckHooks = NULL;
 HANDLE hMutex = NULL;
 HHOOK hHook = NULL;
+HANDLE hCleanUp = NULL;
 
 #pragma data_seg()
 

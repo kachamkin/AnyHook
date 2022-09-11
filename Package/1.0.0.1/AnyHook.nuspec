@@ -12,5 +12,6 @@
     <summary>Local, remote and global windows hooks: native and managed</summary>
     <copyright>Copyright © Andrey Kachamkin. All rights reserved.</copyright>
     <tags>api hook hooking anyhook native nativepackage net framework core</tags>
+    <repository type="git" url="https://github.com/kachamkin/AnyHook.git"/>
   </metadata>
 </package>
