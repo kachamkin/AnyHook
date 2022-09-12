@@ -14,9 +14,9 @@ __declspec(dllimport) extern BOOL UseStealth;
 int wmain()
 {
     UseStealth = TRUE;
-    SetRemoteHook(L"kernel32.dll", L"TerminateProcess", L"C:\\Users\\kacha\\source\\repos\\AnyHook\\x64\\Debug\\Shadow.dll", L"ShadowTerminateProcess", 13384);
+    SetRemoteHook(L"kernel32.dll", L"TerminateProcess", L"C:\\Users\\kacha\\source\\repos\\AnyHook\\x64\\Debug\\Shadow.dll", L"ShadowTerminateProcess", 21696);
     Sleep(1);
-    RemoveRemoteHook(L"TerminateProcess", 13384);
+    RemoveRemoteHook(L"TerminateProcess", 21696);
     //TerminateProcess(GetCurrentProcess(), 0);
     WaitForSingleObject(GetCurrentProcess(), INFINITE);
     return 0;

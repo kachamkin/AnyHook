@@ -30,6 +30,7 @@ void OnAttach(HMODULE hModule)
     hDll = hModule;
     if (creatorId && GetCurrentProcessId() != creatorId)
     {
+        hCleanUp = CreateEvent(NULL, TRUE, FALSE,NULL);
         if (!checkHookThreadCreated)
         {
             HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitForHooks, NULL, 0, NULL);
@@ -62,12 +63,8 @@ void DeleteTBH(PTBHOOKED tbh)
 
 void CleanUp()
 {
-    HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
-    if (hClean)
-    {
-        ResetEvent(hClean);
-        CloseHandle(hClean);
-    }
+    if (hCleanUp)
+        ResetEvent(hCleanUp);
     
     DWORD procId = GetCurrentProcessId();
 
@@ -287,16 +284,14 @@ HMODULE IsModuleInUse(UINT64 address)
 
 void WaitForRemove()
 {
-    HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
     HANDLE hRem = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\SignalRemove");
-    HANDLE handles[2]{ hClean, hRem };
-    if (hRem && hClean)
+    HANDLE handles[2]{ hCleanUp, hRem };
+    if (hRem && hCleanUp)
     {
         DWORD waitResult = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
         if (waitResult == WAIT_OBJECT_0)
         {
             CloseHandle(hRem);
-            CloseHandle(hClean);
             FreeLibraryAndExitThread(hDll, 0);
         }
         else if (waitResult == WAIT_OBJECT_0 + 1)
@@ -336,16 +331,14 @@ void WaitForRemove()
 
 void WaitForHooks()
 {
-    HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
     HANDLE hCheck = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE , FALSE, L"Global\\SignalCheckHooks");
-    HANDLE handles[2]{ hClean, hCheck };
-    if (hCheck && hClean)
+    HANDLE handles[2]{ hCleanUp, hCheck };
+    if (hCheck && hCleanUp)
     {
         DWORD waitResult = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
         if (waitResult == WAIT_OBJECT_0)
         {
             CloseHandle(hCheck);
-            CloseHandle(hClean);
             FreeLibraryAndExitThread(hDll, 0);
         }
         else if (waitResult == WAIT_OBJECT_0 + 1)
@@ -377,7 +370,6 @@ void WaitForHooks()
                 CloseHandle(hMut);
             }
             CloseHandle(hCheck);
-            CloseHandle(hClean);
             WaitForHooks();
         }
     }
@@ -390,7 +382,6 @@ BOOL Initialize(BOOL fromCreator = TRUE)
         creatorId = GetCurrentProcessId();
         hRemove = CreateEvent(NULL, TRUE, FALSE, L"Global\\SignalRemove");
         hCheckHooks = CreateEvent(NULL, TRUE, FALSE, L"Global\\SignalCheckHooks");
-        hCleanUp = CreateEvent(NULL, TRUE, FALSE, L"Global\\CleanUp");
         hMutex = CreateMutex(NULL, TRUE, L"Global\\ReadWriteEnabled");
         if (hMutex)
             ReleaseMutex(hMutex);
@@ -957,12 +948,10 @@ void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
             
             if (!AreThereHooks((funcAddress ? to_string(funcAddress).data() : funcName), procId) && !AreThereGlobalHooks(funcAddress ? to_string(funcAddress).data() : funcName, procId))
             {
-                HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
-                if (hClean)
+                if (hCleanUp)
                 {
-                    if (!SetEvent(hClean))
+                    if (!SetEvent(hCleanUp))
                         AddLogMessage(L"Couldn't set event", __FILE__, __LINE__);
-                    CloseHandle(hClean);
                 }
                 else
                     AddLogMessage(L"Couldn't open event", __FILE__, __LINE__);

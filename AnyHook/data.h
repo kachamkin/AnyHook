@@ -21,10 +21,10 @@ HANDLE hRemove = NULL;
 HANDLE hCheckHooks = NULL;
 HANDLE hMutex = NULL;
 HHOOK hHook = NULL;
-HANDLE hCleanUp = NULL;
 
 #pragma data_seg()
 
+HANDLE hCleanUp = NULL;
 BOOL removeThreadCreated = FALSE;
 BOOL checkHookThreadCreated = FALSE;
 BOOL UseStealth = FALSE;
