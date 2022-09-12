@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Andrey Kachamkin"
             VALUE "FileDescription", "Local, remote and global Windows hooks"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileVersion", "1.0.0.5"
             VALUE "InternalName", "AnyHook.dll"
             VALUE "LegalCopyright", "(C) 2022 Andrey Kachamkin"
             VALUE "OriginalFilename", "AnyHook.dll"
             VALUE "ProductName", "AnyHook library"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.0.0.5"
         END
     END
     BLOCK "VarFileInfo"
