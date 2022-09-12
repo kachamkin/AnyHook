@@ -10,10 +10,9 @@ namespace ManagedShadow
 {
     public class Class1
     {
-        [return: MarshalAs(UnmanagedType.Bool)]
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate bool ShadowTerminateProcessDelegate(IntPtr handle, Int32 exitCode);
 
-        [return: MarshalAs(UnmanagedType.Bool)]
         public static bool ShadowTerminateProcess(IntPtr handle, Int32 exitCode)
         {
             MessageBox.Show(handle.ToString());

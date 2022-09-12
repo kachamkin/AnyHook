@@ -844,6 +844,28 @@ BOOL SetHook(LPCWSTR moduleName, LPCSTR funcName, LPCWSTR callBackModuleName, LP
 	return TRUE;
 }
 
+void ReleaseLibraries(LPCSTR funcName, DWORD procId, UINT64 funcAddress, UINT64 address)
+{
+    if (address)
+    {
+        HMODULE hMod = IsModuleInUse(address);
+        if (hMod)
+            FreeLibrary(hMod);
+    }
+
+    if (!AreThereHooks((funcAddress ? to_string(funcAddress).data() : funcName), procId) && !AreThereGlobalHooks(funcAddress ? to_string(funcAddress).data() : funcName, procId))
+    {
+        FreeManagedLibrary();
+        if (hCleanUp)
+        {
+            if (!SetEvent(hCleanUp))
+                AddLogMessage(L"Couldn't set event", __FILE__, __LINE__);
+        }
+        else
+            AddLogMessage(L"Couldn't open event", __FILE__, __LINE__);
+    }
+}
+
 void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
 {
     DWORD currProcId = GetCurrentProcessId();
@@ -938,26 +960,7 @@ void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
             AddLogMessage(L"Couldn't open mutex", __FILE__, __LINE__);
         
         if (key.substr(0, 2) != "0:")
-        {
-            if (address)
-            {
-                HMODULE hMod = IsModuleInUse(address);
-                if (hMod)
-                    FreeLibrary(hMod);
-            }
-            
-            if (!AreThereHooks((funcAddress ? to_string(funcAddress).data() : funcName), procId) && !AreThereGlobalHooks(funcAddress ? to_string(funcAddress).data() : funcName, procId))
-            {
-                FreeManagedLibrary();
-                if (hCleanUp)
-                {
-                    if (!SetEvent(hCleanUp))
-                        AddLogMessage(L"Couldn't set event", __FILE__, __LINE__);
-                }
-                else
-                    AddLogMessage(L"Couldn't open event", __FILE__, __LINE__);
-            }
-        }
+            ReleaseLibraries(funcName, procId, funcAddress, address);
     }
 }
 
