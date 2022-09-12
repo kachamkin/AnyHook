@@ -207,8 +207,69 @@ BOOL AreThereHooks(LPCSTR funcName, DWORD procId)
         if (WaitForSingleObject(hMut, INFINITE) == WAIT_OBJECT_0)
         {
             ReadMapping(L"Global\\hooks");
-            if (hooks.size() && hooks.find(to_string(procId) + ":" + funcName) != hooks.end())
-                ret = TRUE;
+            for (pair<string, HOOKREC> p : hooks)
+                if (funcName == p.first.substr(p.first.find(":") + 1))
+                {
+                    ret = TRUE;
+                    break;
+                }
+            ReleaseMutex(hMut);
+        }
+        CloseHandle(hMut);
+    }
+
+    return ret;
+}
+
+HMODULE IsModuleInUse(UINT64 address)
+{
+    HMODULE hMod = NULL;
+    if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCWSTR)address, &hMod))
+        return NULL;
+
+    HMODULE ret = hMod;
+
+    HANDLE hMut = OpenMutex(SYNCHRONIZE, FALSE, L"Global\\ReadWriteEnabled");
+    if (hMut)
+    {
+        if (WaitForSingleObject(hMut, INFINITE) == WAIT_OBJECT_0)
+        {
+            ReadMapping(L"Global\\hooks");
+            ReadMapping(L"Global\\globalHooks");
+
+            for (pair<string, HOOKREC> p : globalHooks)
+            {
+                HMODULE hCurrMod = NULL;
+                if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCWSTR)p.second.ui64AddressShadowFunc, &hCurrMod))
+                {
+                    ret = NULL;
+                    break;
+                }
+                if (hMod == hCurrMod)
+                {
+                    ret = NULL;
+                    break;
+                }
+            }
+
+            if (!ret)
+            {
+                for (pair<string, HOOKREC> p : hooks)
+                {
+                    HMODULE hCurrMod = NULL;
+                    if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCWSTR)p.second.ui64AddressShadowFunc, &hCurrMod))
+                    {
+                        ret = NULL;
+                        break;
+                    }
+                    if (hMod == hCurrMod)
+                    {
+                        ret = NULL;
+                        break;
+                    }
+                }
+            }
+
             ReleaseMutex(hMut);
         }
         CloseHandle(hMut);
@@ -844,6 +905,7 @@ void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
         delete[] wFuncName;
     }
 
+    UINT64 address = 0;
     if (key.length())
     {
         HANDLE hMut = OpenMutex(SYNCHRONIZE, FALSE, L"Global\\ReadWriteEnabled");
@@ -854,6 +916,7 @@ void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
                 ReadMapping(L"Global\\hooks");
                 if (hooks.find(key) != hooks.end())
                 {
+                    address = hooks[key].ui64AddressShadowFunc;
                     DestroyHook(&hooks[key]);
                     hooks.erase(key);
                     WriteMapping(L"Global\\hooks");
@@ -861,6 +924,8 @@ void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
                 ReadMapping(L"Global\\globalHooks");
                 if (globalHooks.find(key) != globalHooks.end())
                 {
+                    if (!address)
+                        address = hooks[key].ui64AddressShadowFunc;
                     DestroyHook(&globalHooks[key]);
                     globalHooks.erase(key);
                     WriteMapping(L"Global\\globalHooks");
@@ -874,13 +939,26 @@ void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
         else
             AddLogMessage(L"Couldn't open mutex", __FILE__, __LINE__);
         
-        if (key.substr(0, 2) != "0:" && !AreThereHooks((funcAddress ? to_string(funcAddress).data() : funcName), procId) && !AreThereGlobalHooks(funcAddress ? to_string(funcAddress).data() : funcName, procId))
+        if (key.substr(0, 2) != "0:")
         {
-            HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
-            if (hClean)
+            if (address)
             {
-                SetEvent(hClean);
-                CloseHandle(hClean);
+                HMODULE hMod = IsModuleInUse(address);
+                if (hMod)
+                    FreeLibrary(hMod);
+            }
+            
+            if (!AreThereHooks((funcAddress ? to_string(funcAddress).data() : funcName), procId) && !AreThereGlobalHooks(funcAddress ? to_string(funcAddress).data() : funcName, procId))
+            {
+                HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
+                if (hClean)
+                {
+                    if (!SetEvent(hClean))
+                        AddLogMessage(L"Couldn't set event", __FILE__, __LINE__);
+                    CloseHandle(hClean);
+                }
+                else
+                    AddLogMessage(L"Couldn't open event", __FILE__, __LINE__);
             }
         }
     }

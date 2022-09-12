@@ -31,7 +31,7 @@ __declspec(dllimport) extern BOOL SetRemoteHook(LPCWSTR, LPCWSTR, LPCWSTR, LPCWS
 
 int wmain()
 {
-    SetRemoteHook(L"kernel32.dll", L"TerminateProcess", "C:\Users\kacha\source\repos\AnyHook\ManagedShadow\bin\Debug\ManagedShadow.dll", L"ShadowTerminateProcess\ShadowTerminateProcessDelegate", 8780);
+    SetRemoteHook(L"kernel32.dll", L"TerminateProcess", "C:\Users\kacha\source\repos\AnyHook\ManagedShadow\bin\Debug\ManagedShadow.dll", L"ShadowTerminateProcess", 8780);
     TerminateProcess(GetCurrentProcess(), 0);
     WaitForSingleObject(GetCurrentProcess(), INFINITE);
     return 0;
