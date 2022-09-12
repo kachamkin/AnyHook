@@ -256,3 +256,21 @@ UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName)
         return 0;
 	}
 }
+
+void FreeManagedLibrary()
+{
+    if (AnyHook::AnyHook::assm == nullptr)
+        return;
+
+    marshal_context^ context = gcnew marshal_context();
+    try
+    {
+        HMODULE hMod = GetModuleHandle(context->marshal_as<const wchar_t*>(AnyHook::AnyHook::assm->Location));
+        if (hMod)
+            FreeLibrary(hMod);
+    }
+    catch (Exception^ ex)
+    {
+        AddLogMessage(context->marshal_as<const wchar_t*>(ex->Message), __FILE__, __LINE__);
+    }
+}

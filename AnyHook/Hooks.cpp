@@ -30,7 +30,7 @@ void OnAttach(HMODULE hModule)
     hDll = hModule;
     if (creatorId && GetCurrentProcessId() != creatorId)
     {
-        hCleanUp = CreateEvent(NULL, TRUE, FALSE,NULL);
+        hCleanUp = CreateEvent(NULL, TRUE, FALSE, NULL);
         if (!checkHookThreadCreated)
         {
             HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitForHooks, NULL, 0, NULL);
@@ -63,9 +63,6 @@ void DeleteTBH(PTBHOOKED tbh)
 
 void CleanUp()
 {
-    if (hCleanUp)
-        ResetEvent(hCleanUp);
-    
     DWORD procId = GetCurrentProcessId();
 
     if (creatorId && procId == creatorId)
@@ -75,6 +72,9 @@ void CleanUp()
     }
     else
     {
+        if (hCleanUp)
+            ResetEvent(hCleanUp);
+       
         HANDLE hMut = OpenMutex(SYNCHRONIZE, FALSE, L"Global\\ReadWriteEnabled");
         if (hMut)
         {
@@ -948,6 +948,7 @@ void RemoveHook(LPCSTR funcName, DWORD procId = 0, UINT64 funcAddress = NULL)
             
             if (!AreThereHooks((funcAddress ? to_string(funcAddress).data() : funcName), procId) && !AreThereGlobalHooks(funcAddress ? to_string(funcAddress).data() : funcName, procId))
             {
+                FreeManagedLibrary();
                 if (hCleanUp)
                 {
                     if (!SetEvent(hCleanUp))

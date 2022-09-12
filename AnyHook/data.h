@@ -46,5 +46,6 @@ unordered_map<string, HOOKREC>* DeserializeMap(LPBYTE, SIZE_T);
 LPBYTE SerializeVector(vector<PTBHOOKED>, SIZE_T*);
 vector<PTBHOOKED>* DeserializeVector(LPBYTE, SIZE_T);
 UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName);
+void FreeManagedLibrary();
 extern "C" void StealthStub_ASM_x64();
 wchar_t* a2w(const char* c);
