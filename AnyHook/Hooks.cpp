@@ -62,6 +62,13 @@ void DeleteTBH(PTBHOOKED tbh)
 
 void CleanUp()
 {
+    HANDLE hClean = OpenEvent(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, L"Global\\CleanUp");
+    if (hClean)
+    {
+        ResetEvent(hClean);
+        CloseHandle(hClean);
+    }
+    
     DWORD procId = GetCurrentProcessId();
 
     if (creatorId && procId == creatorId)
