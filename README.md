@@ -37,7 +37,7 @@ int wmain()
     return 0;
 }
 
-Author parially used ideas proposed and implemented:
+Author partially used ideas proposed and implemented:
 
 1) here: https://github.com/EasyHook/EasyHook
 2) and here: https://github.com/williammortl/Prochook64
