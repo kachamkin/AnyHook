@@ -72,9 +72,6 @@ void CleanUp()
     }
     else
     {
-        if (hCleanUp)
-            ResetEvent(hCleanUp);
-       
         HANDLE hMut = OpenMutex(SYNCHRONIZE, FALSE, L"Global\\ReadWriteEnabled");
         if (hMut)
         {
