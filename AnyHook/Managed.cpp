@@ -1,6 +1,7 @@
 #include <msclr\marshal.h>
 
 using namespace System;
+using namespace System::Collections::Generic;
 using namespace System::Reflection;
 using namespace System::Runtime::InteropServices;
 using namespace msclr::interop;
@@ -33,7 +34,7 @@ namespace AnyHook
     {
     internal:
         
-        static Assembly^ assm;
+        static List<Assembly^>^ assm = gcnew List<Assembly^>(1);
 
         static UINT64 GetPointer(Delegate^ callBackAddress)
         {
@@ -221,7 +222,7 @@ namespace AnyHook
 
 Assembly^ Resolve(Object^ source, ResolveEventArgs^ e)
 {
-    return AnyHook::AnyHook::assm;
+    return AnyHook::AnyHook::assm[AnyHook::AnyHook::assm->Count - 1];
 }
 
 UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName)
@@ -233,17 +234,16 @@ UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName)
         String^ delegateName = sFuncName->Substring(pos + 1);
         sFuncName = sFuncName->Substring(0, pos);
 
-        AnyHook::AnyHook::assm = Assembly::LoadFile(gcnew String(moduleName));
+        AnyHook::AnyHook::assm->Add(Assembly::LoadFile(gcnew String(moduleName)));
         AppDomain::CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&Resolve);
 
-        array<Type^>^ types = AnyHook::AnyHook::assm->GetTypes();
-		for (int i = 0; i < types->Length; i++)
+		for each (Type^ t in AnyHook::AnyHook::assm[AnyHook::AnyHook::assm->Count - 1]->GetTypes())
 		{
-            MethodInfo^ method = types[i]->GetMethod(sFuncName);
+            MethodInfo^ method = t->GetMethod(sFuncName);
 			if (method != nullptr)
                 if (method->IsPublic && method->IsStatic)
                 {
-                    String^ aqn = types[i]->AssemblyQualifiedName;
+                    String^ aqn = t->AssemblyQualifiedName;
                     return (long long)Marshal::GetFunctionPointerForDelegate(Delegate::CreateDelegate(Type::GetType(aqn->Insert(aqn->IndexOf(","), "+" + delegateName)), method));
                 }
         }
@@ -259,15 +259,15 @@ UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName)
 
 void FreeManagedLibrary()
 {
-    if (AnyHook::AnyHook::assm == nullptr)
-        return;
-
     marshal_context^ context = gcnew marshal_context();
     try
     {
-        HMODULE hMod = GetModuleHandle(context->marshal_as<const wchar_t*>(AnyHook::AnyHook::assm->Location));
-        if (hMod)
-            FreeLibrary(hMod);
+        for each (Assembly ^ a in AnyHook::AnyHook::assm)
+        {
+            HMODULE hMod = GetModuleHandle(context->marshal_as<const wchar_t*>(a->Location));
+            if (hMod)
+                FreeLibrary(hMod);
+        }
     }
     catch (Exception^ ex)
     {
