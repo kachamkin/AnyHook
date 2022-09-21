@@ -801,6 +801,7 @@ BOOL SetHook(LPCWSTR moduleName, LPCSTR funcName, LPCWSTR callBackModuleName, LP
     if (!CreateHook(hookedFunc, callBackFunc, phr))
     {
         AddLogMessage(L"Couldn't create hook", __FILE__, __LINE__);
+        delete phr;
         return FALSE;
     }
 
@@ -826,6 +827,7 @@ BOOL SetHook(LPCWSTR moduleName, LPCSTR funcName, LPCWSTR callBackModuleName, LP
         else
         {
             AddLogMessage(L"Error waiting for mutex", __FILE__, __LINE__);
+            delete phr;
             return FALSE;
         }
 		CloseHandle(hMut);
@@ -833,6 +835,7 @@ BOOL SetHook(LPCWSTR moduleName, LPCSTR funcName, LPCWSTR callBackModuleName, LP
     else
     {
         AddLogMessage(L"Couldn't open mutex", __FILE__, __LINE__);
+        delete phr;
         return FALSE;
     }
 

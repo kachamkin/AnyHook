@@ -262,7 +262,7 @@ void FreeManagedLibrary()
     marshal_context^ context = gcnew marshal_context();
     try
     {
-        for each (Assembly ^ a in AnyHook::AnyHook::assm)
+        for each (Assembly^ a in AnyHook::AnyHook::assm)
         {
             HMODULE hMod = GetModuleHandle(context->marshal_as<const wchar_t*>(a->Location));
             if (hMod)
