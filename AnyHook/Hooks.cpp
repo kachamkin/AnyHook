@@ -633,7 +633,7 @@ BOOL RemoteLoadLibrary(DWORD procId)
         }
 
         SIZE_T buffSize = sizeof(wchar_t) * ((SIZE_T)nameLength + 1);
-
+       
         LPVOID arg = VirtualAllocEx(hProcess, NULL, buffSize, MEM_COMMIT, PAGE_READWRITE);
 		if (arg && WriteProcessMemory(hProcess, arg, modName, buffSize, NULL))
 		{
@@ -650,7 +650,7 @@ BOOL RemoteLoadLibrary(DWORD procId)
             }
 			else
 			{
-				HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, arg, 0, NULL);
+                HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, arg, 0, NULL);
                 if (hThread)
                 {
                     WaitForSingleObject(hThread, INFINITE);

@@ -13,10 +13,10 @@ __declspec(dllimport) extern BOOL UseStealth;
 
 int wmain()
 {
-    UseStealth = TRUE;
-    SetRemoteHook(L"kernel32.dll", L"TerminateProcess", L"C:\\Users\\kacha\\source\\repos\\AnyHook\\ManagedShadow\\bin\\x64\\Debug\\ManagedShadow.dll", L"ShadowTerminateProcess\\ShadowTerminateProcessDelegate", 31428);
-    Sleep(1);
-    RemoveRemoteHook(L"TerminateProcess", 31428);
+    UseStealth = FALSE;
+    BOOL res = SetRemoteHook(L"kernel32.dll", L"TerminateProcess", L"C:\\Users\\kacha\\source\\repos\\AnyHook\\x64\\Debug\\Shadow.dll", L"ShadowTerminateProcess", 36040);
+    //Sleep(1);
+    //RemoveRemoteHook(L"TerminateProcess", 31428);
     //TerminateProcess(GetCurrentProcess(), 0);
     WaitForSingleObject(GetCurrentProcess(), INFINITE);
     return 0;

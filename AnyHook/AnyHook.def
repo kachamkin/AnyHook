@@ -1,4 +1,4 @@
 LIBRARY AnyHook
 SECTIONS .shared SHARED READ WRITE
 EXPORTS
-	UseStealth @1
+	;UseStealth @1
