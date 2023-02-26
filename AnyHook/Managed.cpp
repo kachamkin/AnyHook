@@ -45,6 +45,9 @@ bool load_hostfxr()
         return false;
 
     HMODULE lib = LoadLibrary(buffer);
+    if (!lib)
+        return false;
+
     init_fptr = (hostfxr_initialize_for_runtime_config_fn)GetProcAddress(lib, "hostfxr_initialize_for_runtime_config");
     get_delegate_fptr = (hostfxr_get_runtime_delegate_fn)GetProcAddress(lib, "hostfxr_get_runtime_delegate");
     close_fptr = (hostfxr_close_fn)GetProcAddress(lib, "hostfxr_close");
@@ -350,7 +353,7 @@ UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName)
         AnyHook::AnyHook::assm->Add(Assembly::LoadFile(gcnew String(moduleName)));
         AppDomain::CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&Resolve);
 
-        for each (Type ^ t in AnyHook::AnyHook::assm[AnyHook::AnyHook::assm->Count - 1]->GetTypes())
+        for each (Type^ t in AnyHook::AnyHook::assm[AnyHook::AnyHook::assm->Count - 1]->GetTypes())
         {
             MethodInfo^ method = t->GetMethod(sFuncName);
             if (method != nullptr)
@@ -360,13 +363,10 @@ UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName)
                     return (long long)Marshal::GetFunctionPointerForDelegate(Delegate::CreateDelegate(Type::GetType(aqn->Insert(aqn->IndexOf(","), "+" + delegateName)), method));
                 }
         }
-        //return 0;
     }
     catch (Exception^ ex)
     {
-        //marshal_context^ context = gcnew marshal_context();
         AddLogMessage(context->marshal_as<const wchar_t*>(ex->Message), __FILE__, __LINE__);
-        //return 0;
     }
 
     if (!ret)
