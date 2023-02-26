@@ -37,28 +37,17 @@ hostfxr_initialize_for_runtime_config_fn init_fptr;
 hostfxr_get_runtime_delegate_fn get_delegate_fptr;
 hostfxr_close_fn close_fptr;
 
-void* load_library(const char_t* path)
-{
-    return LoadLibraryW(path);
-}
-
-void* get_export(void* h, const char* name)
-{
-    return GetProcAddress((HMODULE)h, name);
-}
-
 bool load_hostfxr()
 {
     char_t buffer[MAX_PATH];
     size_t buffer_size = sizeof(buffer) / sizeof(char_t);
-    int rc = get_hostfxr_path(buffer, &buffer_size, nullptr);
-    if (rc != 0)
+    if (get_hostfxr_path(buffer, &buffer_size, nullptr) != 0)
         return false;
 
-    void* lib = load_library(buffer);
-    init_fptr = (hostfxr_initialize_for_runtime_config_fn)get_export(lib, "hostfxr_initialize_for_runtime_config");
-    get_delegate_fptr = (hostfxr_get_runtime_delegate_fn)get_export(lib, "hostfxr_get_runtime_delegate");
-    close_fptr = (hostfxr_close_fn)get_export(lib, "hostfxr_close");
+    HMODULE lib = LoadLibrary(buffer);
+    init_fptr = (hostfxr_initialize_for_runtime_config_fn)GetProcAddress(lib, "hostfxr_initialize_for_runtime_config");
+    get_delegate_fptr = (hostfxr_get_runtime_delegate_fn)GetProcAddress(lib, "hostfxr_get_runtime_delegate");
+    close_fptr = (hostfxr_close_fn)GetProcAddress(lib, "hostfxr_close");
 
     return (init_fptr && get_delegate_fptr && close_fptr);
 }
@@ -75,7 +64,6 @@ load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t*
         return nullptr;
     }
 
-    // Get the load assembly function pointer
     rc = get_delegate_fptr(
         cxt,
         hdt_load_assembly_and_get_function_pointer,
@@ -138,7 +126,7 @@ UINT64 GetDotNetManagedProcAddress(LPCWSTR moduleName, LPCWSTR funcName, LPCWSTR
     wstring dotnet_type = delName.substr(pos + 1, pos1 - pos - 1);
 
     component_entry_point_fn addr = nullptr;
-    int rc = load_assembly_and_get_function_pointer(
+    load_assembly_and_get_function_pointer(
         moduleName,
         (shortName + L"." + dotnet_type + L", " + shortName).c_str(),
         funcName,
