@@ -1,6 +1,6 @@
 # AnyHook
 
-This library gives you a possibility to hook any Windows x64 functions from any code:
+This library gives you a possibility to hook any Windows x64 function calls from any code:
 native C++, managed .NET Framework and managed .NET Core (.NET 6.0).
 You can set local hooks (hooking functions calls of local process), remote hooks (hooking functions calls of remote process by process ID)
 and global hooks (hooking functions calls of any process which uses Windows GetMessage call).
