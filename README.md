@@ -37,6 +37,8 @@ int wmain()
     return 0;
 }
 
+Please keep in mind that "nethost.dll" should be available for your target process. If you provide your callback function in separate .NET Core assembly please don't forget to explicitly provide "*.runtime.config.json" for it. Besides, in such case "AnyHook" does not process dependencies; thus be sure you did not specify "Windows" as target OS for such assembly because it would require "System.Windows.Forms". 
+
 Author partially used ideas proposed and implemented:
 
 1) here: https://github.com/EasyHook/EasyHook
