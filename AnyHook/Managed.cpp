@@ -123,12 +123,10 @@ UINT64 GetDotNetManagedProcAddress(LPCWSTR moduleName, LPCWSTR funcName, LPCWSTR
         return 0;
     }
 
-    wstring dotnet_type = delName.substr(pos + 1, pos1 - pos - 1);
-
     component_entry_point_fn addr = nullptr;
     load_assembly_and_get_function_pointer(
         moduleName,
-        (shortName + L"." + dotnet_type + L", " + shortName).c_str(),
+        (shortName + L"." + delName.substr(pos + 1, pos1 - pos - 1) + L", " + shortName).c_str(),
         funcName,
         (wstring(delegateName) + L", " + shortName).c_str(),
         nullptr,
