@@ -100,10 +100,8 @@ UINT64 GetDotNetManagedProcAddress(LPCWSTR moduleName, LPCWSTR funcName, LPCWSTR
     if (pos != wstring::npos)
         shortName = shortName.substr(0, pos);
 
-    wstring config_path = dirName + shortName + L".runtimeconfig.json";
-    
     load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer = nullptr;
-    load_assembly_and_get_function_pointer = get_dotnet_load_assembly(config_path.c_str());
+    load_assembly_and_get_function_pointer = get_dotnet_load_assembly((dirName + shortName + L".runtimeconfig.json").c_str());
     if (load_assembly_and_get_function_pointer == nullptr)
     {
         AddLogMessage(L"Failure: get_dotnet_load_assembly()", __FILE__, __LINE__);
@@ -111,7 +109,6 @@ UINT64 GetDotNetManagedProcAddress(LPCWSTR moduleName, LPCWSTR funcName, LPCWSTR
     }
 
     wstring delName = delegateName;
-
     pos = delName.find(L".");
     if (pos == wstring::npos)
     {
@@ -339,10 +336,9 @@ Assembly^ Resolve(Object^ source, ResolveEventArgs^ e)
 
 UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName)
 {
-    UINT64 ret = 0;
     marshal_context^ context = gcnew marshal_context();
     String^ sFuncName = gcnew String(funcName);
-    String^ delegateName = "";
+    String^ delegateName;
 
     try
     {
@@ -369,8 +365,7 @@ UINT64 GetManagedProcAddress(LPCWSTR moduleName, LPCSTR funcName)
         AddLogMessage(context->marshal_as<const wchar_t*>(ex->Message), __FILE__, __LINE__);
     }
 
-    if (!ret)
-        return GetDotNetManagedProcAddress(moduleName, context->marshal_as<const wchar_t*>(sFuncName), context->marshal_as<const wchar_t*>(delegateName));
+    return GetDotNetManagedProcAddress(moduleName, context->marshal_as<const wchar_t*>(sFuncName), context->marshal_as<const wchar_t*>(delegateName));
 }
 
 void FreeManagedLibrary()
