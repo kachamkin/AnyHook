@@ -39,7 +39,11 @@ int wmain()
 
 Please keep in mind that "nethost.dll" should be available for your target process. If you provide your callback function in separate .NET Core assembly please don't forget to explicitly provide "*.runtime.config.json" for it. Besides, in such case "AnyHook" does not process dependencies; thus be sure you did not specify "Windows" as target OS for such assembly because it would require "System.Windows.Forms". Function / delegate names in parameter for .NET Core should be written in assembly qualified form:
 
-"ShadowTerminateProcess\\ClassLibrary1.Class1+ShadowTerminateProcessDelegate"
+"ShadowTerminateProcess\\ClassLibrary1.Class1+ShadowTerminateProcessDelegate".
+
+For .NET Framework short form is enough:
+
+"ShadowTerminateProcess\\ShadowTerminateProcessDelegate".
 
 Author partially used ideas proposed and implemented:
 
