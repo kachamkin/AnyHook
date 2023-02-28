@@ -4,17 +4,53 @@
 #include <iostream>
 #include <string>
 #include <Windows.h>
+#include <winternl.h>
 
 using namespace std;
 
-__declspec(dllimport) extern BOOL SetRemoteHook(LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, DWORD);
+__declspec(dllimport) extern BOOL SetRemoteHook(LPCWSTR, LPCWSTR, DWORD, UINT64);
 __declspec(dllimport) extern void WINAPI RemoveRemoteHook(LPCWSTR, DWORD);
 __declspec(dllimport) extern BOOL UseStealth;
 
+__kernel_entry NTSTATUS NtQuerySystemInformationShadow(
+    SYSTEM_INFORMATION_CLASS SystemInformationClass, // What info to be retrieved. 
+    PVOID                    SystemInformation,     // A buffer that receives the requested information.
+    ULONG                    SystemInformationLength, // The size of the buffer pointed to by the SystemInformation parameter, in bytes.
+    PULONG                   ReturnLength // Optional.
+)
+{
+    // Calling og function (Trampoline)
+    //NTSTATUS status = qsi(SystemInformationClass, SystemInformation, SystemInformationLength, ReturnLength);
+
+    if (SystemProcessInformation == SystemInformationClass)
+    {
+        SYSTEM_PROCESS_INFORMATION* pCurrent;
+        SYSTEM_PROCESS_INFORMATION* pNext = (SYSTEM_PROCESS_INFORMATION*)SystemInformation;
+
+        do
+        {
+            pCurrent = pNext;
+            pNext = (SYSTEM_PROCESS_INFORMATION*)((PUCHAR)pCurrent + pCurrent->NextEntryOffset);
+
+            if (wcsncmp(pNext->ImageName.Buffer, L"Test.exe", pNext->ImageName.Length) == 0)
+            {
+                if (pNext->NextEntryOffset == 0)
+                    pCurrent->NextEntryOffset = 0;
+                else
+                    pCurrent->NextEntryOffset += pNext->NextEntryOffset;
+            }
+
+        } while (pCurrent->NextEntryOffset != 0);
+
+    }
+
+    return 0;
+}
+
 int wmain()
 {
-    UseStealth = FALSE;
-    BOOL res = SetRemoteHook(L"kernel32.dll", L"TerminateProcess", L"C:\\Users\\kacha\\source\\repos\\AnyHook\\x64\\Debug\\Shadow.dll", L"ShadowTerminateProcess", 36040);
+    //UseStealth = FALSE;
+    BOOL res = SetRemoteHook(L"ntdll.dll", L"NtQuerySystemInformation", 15860, (UINT64)NtQuerySystemInformationShadow);
     //Sleep(1);
     //RemoveRemoteHook(L"TerminateProcess", 31428);
     //TerminateProcess(GetCurrentProcess(), 0);
