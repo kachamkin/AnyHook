@@ -16,7 +16,7 @@ bool load_hostfxr()
 {
     char_t buffer[MAX_PATH];
     size_t buffer_size = sizeof(buffer) / sizeof(char_t);
-    if (get_hostfxr_path(buffer, &buffer_size, nullptr) != 0)
+    if (get_hostfxr_path(buffer, &buffer_size, nullptr))
         return false;
 
     HMODULE lib = LoadLibrary(buffer);
@@ -34,19 +34,17 @@ load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t*
 {
     void* load_assembly_and_get_function_pointer = nullptr;
     hostfxr_handle cxt = nullptr;
-    int rc = init_fptr(config_path, nullptr, &cxt);
-    if (rc != 0 || cxt == nullptr)
+    if (init_fptr(config_path, nullptr, &cxt) || !cxt)
     {
         AddLogMessage(L".NET init failed", __FILE__, __LINE__);
         close_fptr(cxt);
         return nullptr;
     }
 
-    rc = get_delegate_fptr(
+    if (get_delegate_fptr(
         cxt,
         hdt_load_assembly_and_get_function_pointer,
-        &load_assembly_and_get_function_pointer);
-    if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
+        &load_assembly_and_get_function_pointer) || !load_assembly_and_get_function_pointer)
         AddLogMessage(L"Get delegate failed", __FILE__, __LINE__);
 
     close_fptr(cxt);
@@ -75,9 +73,8 @@ UINT64 GetDotNetManagedProcAddress(LPCWSTR moduleName, LPCWSTR funcName, LPCWSTR
     if (pos != wstring::npos)
         shortName = shortName.substr(0, pos);
 
-    load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer = nullptr;
-    load_assembly_and_get_function_pointer = get_dotnet_load_assembly((dirName + shortName + L".runtimeconfig.json").c_str());
-    if (load_assembly_and_get_function_pointer == nullptr)
+    load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer = get_dotnet_load_assembly((dirName + shortName + L".runtimeconfig.json").c_str());
+    if (!load_assembly_and_get_function_pointer)
     {
         AddLogMessage(L"Failure: get_dotnet_load_assembly()", __FILE__, __LINE__);
         return 0;
