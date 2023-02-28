@@ -8,7 +8,7 @@
 
 using namespace std;
 
-__declspec(dllimport) extern BOOL SetRemoteHook(LPCWSTR, LPCWSTR, DWORD, UINT64);
+__declspec(dllimport) extern BOOL SetRemoteHook(LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, DWORD);
 __declspec(dllimport) extern void WINAPI RemoveRemoteHook(LPCWSTR, DWORD);
 __declspec(dllimport) extern BOOL UseStealth;
 
@@ -50,7 +50,7 @@ __kernel_entry NTSTATUS NtQuerySystemInformationShadow(
 int wmain()
 {
     //UseStealth = FALSE;
-    BOOL res = SetRemoteHook(L"ntdll.dll", L"NtQuerySystemInformation", 15860, (UINT64)NtQuerySystemInformationShadow);
+    BOOL res = SetRemoteHook(L"ntdll.dll", L"NtQuerySystemInformation", L"C:\\Users\\kacha\\source\\repos\\AnyHook\\x64\\Debug\\Shadow.dll", L"NtQuerySystemInformationShadow", 8280);
     //Sleep(1);
     //RemoveRemoteHook(L"TerminateProcess", 31428);
     //TerminateProcess(GetCurrentProcess(), 0);
